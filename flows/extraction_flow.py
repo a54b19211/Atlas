@@ -86,6 +86,16 @@ def _call_llm_for_chunk(chunk, source_site: str) -> dict:
 # 解析与校验
 # ═══════════════════════════════════════════════════════════════════════
 
+def _model_data(value):
+    """模型输出里以下划线开头的键（_disambig、_embeddings 等）是内部用的，不能由模型提供。"""
+    if isinstance(value, dict):
+        return {key: _model_data(item) for key, item in value.items()
+                if isinstance(key, str) and not key.startswith("_")}
+    if isinstance(value, list):
+        return [_model_data(item) for item in value]
+    return value
+
+
 def _parse_chunk_output(raw: dict, chunk_index: int) -> tuple[list[dict], list[dict]]:
     """
     解析单块 LLM 输出，返回 (entities, relations)。
@@ -110,7 +120,7 @@ def _parse_chunk_output(raw: dict, chunk_index: int) -> tuple[list[dict], list[d
         entities.append({
             "entity_type": entity_type,
             "entity_name": str(item.get("entity_name", "")),
-            "entity_data": validate_entity_data(entity_type, item.get("entity_data", {})),
+            "entity_data": validate_entity_data(entity_type, _model_data(item.get("entity_data", {}))),
             "source_text": str(item.get("source_text", ""))[:500],
             "confidence_score": float(item.get("confidence_score", 0.5)),
             "confidence_reason": str(item.get("confidence_reason", "")),
@@ -136,7 +146,7 @@ def _parse_chunk_output(raw: dict, chunk_index: int) -> tuple[list[dict], list[d
             "from_entity_idx": from_idx,   # 块内局部下标，待重映射
             "to_entity_idx": to_idx,
             "relation_type": relation_type,
-            "relation_props": item.get("relation_props", {}),
+            "relation_props": _model_data(item.get("relation_props", {})),
             "source_text": str(item.get("source_text", ""))[:500],
             "confidence_score": float(item.get("confidence_score", 0.5)),
             "confidence_reason": str(item.get("confidence_reason", "")),
