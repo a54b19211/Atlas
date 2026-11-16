@@ -21,7 +21,7 @@ from disambiguation.models import (
 )
 from disambiguation.normalizer import generate_candidate_names, normalize_for_alignment
 from disambiguation.rules import match_strong_id, match_by_entity_rules
-from disambiguation.llm_ranker import rank_with_reranker, rank_with_llm
+from disambiguation.llm_ranker import rank_with_reranker
 from disambiguation.routing import route_decision
 
 

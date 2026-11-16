@@ -7,8 +7,7 @@ Step 3: 实体类型特定规则，按类型决定 auto_matched / candidate_matc
 
 from db.repository import lookup_external_id
 from disambiguation.models import (
-    DisambiguationResult, CandidateEntity,
-    STATUS_AUTO_MATCHED, STATUS_CANDIDATE_MATCHED,
+    DisambiguationResult, STATUS_AUTO_MATCHED, STATUS_CANDIDATE_MATCHED,
 )
 
 

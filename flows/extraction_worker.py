@@ -16,7 +16,7 @@ import threading
 import queue
 import time
 from dataclasses import dataclass, field
-from typing import Callable, Optional
+from typing import Optional
 from loguru import logger
 
 from config.settings import APP

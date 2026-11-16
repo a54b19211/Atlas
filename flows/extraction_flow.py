@@ -29,7 +29,6 @@ from db.repository import (
 )
 from db.session import get_session
 from db.models import Document
-from config.settings import APP
 
 ENTITY_EXTRACTION_SYSTEM_PROMPT = (
     "你是医药行业知识图谱构建专家。"

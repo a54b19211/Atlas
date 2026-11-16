@@ -192,7 +192,7 @@ class WeKnoraGraphClient:
             resp = httpx.post(url, json=payload, headers=self._headers, timeout=60.0)
             logger.info(f"[WeKnoraGraph] upload_document 响应 {resp.status_code}: {resp.text[:200]}")
             if resp.status_code == 409:
-                logger.info(f"[WeKnoraGraph] 文档已存在（409），视为已同步")
+                logger.info("[WeKnoraGraph] 文档已存在（409），视为已同步")
                 return ""
             resp.raise_for_status()
             data = resp.json()
@@ -201,7 +201,7 @@ class WeKnoraGraphClient:
             return data.get("data", {}).get("id", "")
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 409:
-                logger.info(f"[WeKnoraGraph] 文档已存在（409），视为已同步")
+                logger.info("[WeKnoraGraph] 文档已存在（409），视为已同步")
                 return ""
             logger.error(f"[WeKnoraGraph] upload_document HTTP {e.response.status_code}: {e.response.text[:300]}")
             raise

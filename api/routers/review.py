@@ -21,7 +21,7 @@ from api.schemas.response import (
     RelationListResponse, RelationItem,
     ReviewActionResponse,
     DisambigInfo, DisambigCandidate,
-    MergeQueueGroup, MergeQueueListResponse,
+    MergeQueueListResponse,
     DictCandidateItem, DictCandidateListResponse,
     GraphResponse, GraphNode, GraphEdge,
     ReviewStatsResponse, StatusCounts,
@@ -35,11 +35,10 @@ from api.schemas.response import (
 )
 from db.repository import (
     approve_entity_with_alias_writeback,
-    approve_entity, reject_entity,
+    reject_entity,
     approve_relation, reject_relation,
     batch_approve_entities, batch_reject_entities,
     batch_approve_relations, batch_reject_relations,
-    log_review_action,
     get_pending_merges, resolve_merge, batch_resolve_merges,
     find_candidate_dicts_for_review,
     search_entity_dicts, compare_entities,
