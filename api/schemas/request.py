@@ -61,16 +61,6 @@ class WeknoraBatchRequest(BaseModel):
     limit: int = Field(default=100, ge=1, description="单次同步文档数量上限")
 
 
-class RecrawlRequest(BaseModel):
-    """重爬请求体（目前无额外参数，预留扩展）"""
-    pass
-
-
-class BatchRecrawlRequest(BaseModel):
-    """批量重爬请求体"""
-    uuids: list[str] = Field(..., min_length=1, description="需要重爬的文档 UUID 列表")
-
-
 class GraphSyncRequest(BaseModel):
     limit: int = Field(default=500, ge=1, le=500, description="单次最多处理 500 条")
 

@@ -7,10 +7,6 @@
 ALTER TABLE documents
     ADD COLUMN IF NOT EXISTS raw_content TEXT DEFAULT '';
 
--- attachments 补充 local_path 字段
-ALTER TABLE attachments
-    ADD COLUMN IF NOT EXISTS local_path TEXT DEFAULT '';
-
 -- extracted_entities 补充 source_text 字段
 ALTER TABLE extracted_entities
     ADD COLUMN IF NOT EXISTS source_text TEXT DEFAULT '';

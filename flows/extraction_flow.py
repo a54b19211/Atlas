@@ -18,8 +18,8 @@ import time
 from loguru import logger
 from sqlalchemy import text
 
-from biz_rules.extraction_prompts import get_extraction_prompt, VALID_RELATION_TYPES
-from biz_rules.entity_schemas import validate_entity_data, VALID_ENTITY_TYPES
+from flows.extraction_prompts import get_extraction_prompt, VALID_RELATION_TYPES
+from flows.entity_schemas import validate_entity_data, VALID_ENTITY_TYPES
 from core_engine.cloud_api_client import qwen_extract_structured
 from flows.chunking import split_document, build_memory_context
 from db.repository import (

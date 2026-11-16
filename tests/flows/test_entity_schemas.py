@@ -1,5 +1,5 @@
-"""biz_rules.entity_schemas 的单元测试。"""
-from biz_rules.entity_schemas import (
+"""flows.entity_schemas 的单元测试。"""
+from flows.entity_schemas import (
     validate_entity_data,
     _sanitize_entity_data,
     ENTITY_SCHEMA_MAP,

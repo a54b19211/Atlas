@@ -51,40 +51,6 @@ CREATE INDEX IF NOT EXISTS idx_doc_weknora_sync      ON documents(weknora_sync_s
 CREATE INDEX IF NOT EXISTS idx_doc_is_deleted        ON documents(is_deleted);
 
 -- ============================================================
--- 2. doc_extra — 来源特有字段
--- ============================================================
-CREATE TABLE IF NOT EXISTS doc_extra (
-    id          BIGSERIAL   PRIMARY KEY,
-    uuid        TEXT        NOT NULL UNIQUE,
-    source_site TEXT        NOT NULL DEFAULT '',
-    extra       JSONB       NOT NULL DEFAULT '{}',
-    is_deleted  BOOLEAN     NOT NULL DEFAULT FALSE,
-    updated_at  TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_doc_extra_uuid    ON doc_extra(uuid);
-CREATE INDEX IF NOT EXISTS idx_doc_extra_site    ON doc_extra(source_site);
-CREATE INDEX IF NOT EXISTS idx_doc_extra_jsonb   ON doc_extra USING GIN (extra);
-CREATE INDEX IF NOT EXISTS idx_doc_extra_deleted ON doc_extra(is_deleted);
-
--- ============================================================
--- 3. attachments — 文档附件
--- ============================================================
-CREATE TABLE IF NOT EXISTS attachments (
-    id          BIGSERIAL   PRIMARY KEY,
-    parent_uuid TEXT        NOT NULL,
-    file_name   TEXT        DEFAULT '',
-    file_url    TEXT        DEFAULT '',
-    local_path  TEXT        DEFAULT '',
-    file_uuid   TEXT        DEFAULT '',
-    is_deleted  BOOLEAN     NOT NULL DEFAULT FALSE,
-    created_at  TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_att_parent_uuid ON attachments(parent_uuid);
-CREATE INDEX IF NOT EXISTS idx_att_is_deleted  ON attachments(is_deleted);
-
--- ============================================================
 -- 4. entity_dict — 实体字典（消歧主表）
 -- ============================================================
 CREATE TABLE IF NOT EXISTS entity_dict (
@@ -194,30 +160,6 @@ CREATE INDEX IF NOT EXISTS idx_rel_relation_type ON entity_relations(relation_ty
 CREATE INDEX IF NOT EXISTS idx_rel_review_status ON entity_relations(review_status);
 CREATE INDEX IF NOT EXISTS idx_rel_is_deleted    ON entity_relations(is_deleted);
 CREATE INDEX IF NOT EXISTS idx_rel_weknora_graph ON entity_relations(weknora_graph_status);
-
--- ============================================================
--- 8. crawl_log — 爬取任务日志
--- ============================================================
-CREATE TABLE IF NOT EXISTS crawl_log (
-    id                    BIGSERIAL   PRIMARY KEY,
-    site_key              TEXT        NOT NULL DEFAULT '',
-    task_type             TEXT        DEFAULT '',
-    status                TEXT        DEFAULT 'running',
-    total_count           INTEGER     DEFAULT 0,
-    passed_count          INTEGER     DEFAULT 0,
-    failed_count          INTEGER     DEFAULT 0,
-    error_message         TEXT        DEFAULT '',
-    crawl_config_snapshot JSONB       DEFAULT '{}',
-    started_at            TIMESTAMPTZ DEFAULT NOW(),
-    finished_at           TIMESTAMPTZ DEFAULT NULL,
-    is_deleted            BOOLEAN     NOT NULL DEFAULT FALSE,
-    created_at            TIMESTAMPTZ DEFAULT NOW(),
-    updated_at            TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_crawl_site_key   ON crawl_log(site_key);
-CREATE INDEX IF NOT EXISTS idx_crawl_status     ON crawl_log(status);
-CREATE INDEX IF NOT EXISTS idx_crawl_is_deleted ON crawl_log(is_deleted);
 
 -- ============================================================
 -- 9. review_log — 审核操作日志

@@ -1,2 +1,0 @@
-from biz_rules.extractors.fiercepharma.fiercepharma_fetcher import iter_fiercepharma
-from biz_rules.extractors.fiercepharma.fiercepharma import extract_fiercepharma_detail

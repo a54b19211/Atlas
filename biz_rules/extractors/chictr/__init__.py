@@ -1,1 +1,0 @@
-# chictr extractor package

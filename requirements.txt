@@ -1,10 +1,7 @@
-﻿# ============================================================
-# ZK_Data Fabric - 数据基座 MVP 依赖清单
+# ============================================================
+# Atlas 依赖清单
 # 安装命令: pip install -r requirements.txt
 # ============================================================
-
-# --- 调度引擎 ---
-prefect==3.6.22
 
 # --- 配置管理 ---
 pydantic==2.11.5
@@ -13,13 +10,9 @@ pydantic-settings==2.6.1
 # --- 日志 ---
 loguru==0.7.3
 
-# --- 网络采集 ---
-scrapling[all]==0.4.2
-trafilatura==1.12.2
-
 # --- 云端 API 调用 ---
 openai>=1.0                  # 用于调用 Qwen（通义千问）兼容 OpenAI 接口
-httpx>=0.27                  # MinerU 云端 API HTTP 客户端
+httpx>=0.27                  # 拉 fabric、调 WeKnora
 
 # --- 数据库 ---
 sqlalchemy>=2.0              # ORM
@@ -28,10 +21,6 @@ pgvector>=0.3.0              # pgvector 向量类型（name_embedding 列）
 
 # --- 工具 ---
 python-dotenv>=1.0           # .env 文件加载
-
-# --- 文档解析 ---
-openpyxl==3.1.5              # 读取 .xlsx（纯 Python，跨平台）
-xlrd==2.0.1                  # 读取 .xls 旧版二进制格式（纯 Python，跨平台）
 
 # --- 后端 API ---
 fastapi>=0.111.0             # Web 框架
@@ -45,7 +34,7 @@ redis>=5.0                   # Redis Python 客户端
 langgraph>=0.2.0             # Agent 图编排 (StateGraph)
 langchain-core>=0.3.0        # 消息类型 + 工具基类
 langchain-openai>=0.2.0      # ChatOpenAI（复用 DashScope 端点）
-duckduckgo-search>=6.0.0     # 联网搜索工具
+ddgs>=9.0                    # 联网搜索工具（代码 import ddgs）
 
 # --- 测试 ---
 pytest>=8.0                  # 测试框架

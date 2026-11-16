@@ -55,81 +55,10 @@ class Document(Base):
     extracted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     pending_entity_count: Mapped[int] = mapped_column(Integer, default=0)   # 待审核实体数，review_lifecycle 自动维护
     total_entity_count: Mapped[int] = mapped_column(Integer, default=0)     # 文档实体总数，review_lifecycle 自动维护
+    fabric_version_id: Mapped[str] = mapped_column(Text, default="")  # 资料库版本号，fabric_pull.py 写入
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-
-
-# ── 2. doc_extra ──────────────────────────────────────────────
-
-class DocExtra(Base):
-    """来源特有字段，替代 chictr_meta / pubmed_meta / hkex_meta。"""
-    __tablename__ = "doc_extra"
-
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    uuid: Mapped[str] = mapped_column(Text, nullable=False, unique=True)  # 与 documents.uuid 对应
-    source_site: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    extra: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-
-
-class DocAuthorityResolution(Base):
-    """标准标识符对齐结果的入库记录（A1）。
-
-    与 `doc_extra` 同级，都是 documents 的附属表（无外键，沿用软删除风格）。
-    两族共用一张表，靠 `id_type` 区分：
-      - `drug_name`：走 PubChem → ChEMBL → 本地白名单在线对齐，额外带
-        `candidate`（实际查询的候选名）/ `rule`（命中规则）/ `candidates_tried`
-      - `pmid` / `doi` / `nct_id` / `approval_number` / `cas_number`：走本地
-        格式校验族（`source_id='format'`），三元组字段为空。
-
-    `degraded=True` 表示权威库请求降级（429/5xx/网络异常），既不算命中也不算
-    未命中，统计时必须单独报，不能并进未命中率。
-    """
-    __tablename__ = "doc_authority_resolution"
-    __table_args__ = (
-        UniqueConstraint("uuid", "id_type", "resolution_key", name="uq_doc_authority_key"),
-    )
-
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    uuid: Mapped[str] = mapped_column(Text, nullable=False)  # 对应 documents.uuid
-    source_site: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    id_type: Mapped[str] = mapped_column(Text, nullable=False, default="drug_name")
-    resolution_key: Mapped[str] = mapped_column(Text, nullable=False)  # 药名原值 或 字段名
-    found: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    degraded: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    # 占位名（Placebo/盐水/包装描述）跳过查询，须从命中率分母剔除
-    skipped: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    std_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    source_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    raw_value: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    resolved_value: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    candidate: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    rule: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    candidates_tried: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    candidates: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
-    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
-
-
-# ── 3. attachments ────────────────────────────────────────────
-
-class Attachment(Base):
-    __tablename__ = "attachments"
-
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    parent_uuid: Mapped[str] = mapped_column(Text, nullable=False)
-    file_name: Mapped[str] = mapped_column(Text, default="")
-    file_url: Mapped[str] = mapped_column(Text, default="")
-    local_path: Mapped[str] = mapped_column(Text, default="")
-    file_uuid: Mapped[str] = mapped_column(Text, default="")
-    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 # ── 4. entity_dict ────────────────────────────────────────────
@@ -226,28 +155,6 @@ class EntityRelation(Base):
     reviewed_by: Mapped[str] = mapped_column(Text, default="")
     weknora_graph_status: Mapped[str] = mapped_column(Text, default="pending")
     # pending / pushed / failed — WeKnora 图同步状态
-    is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-
-
-# ── 8. crawl_log ──────────────────────────────────────────────
-
-class CrawlLog(Base):
-    """爬取任务日志，记录每次爬取的执行情况。"""
-    __tablename__ = "crawl_log"
-
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    site_key: Mapped[str] = mapped_column(Text, nullable=False, default="")  # nmpa/cde/pubmed/...
-    task_type: Mapped[str] = mapped_column(Text, default="")           # full/incremental
-    status: Mapped[str] = mapped_column(Text, default="running")       # running/success/failed
-    total_count: Mapped[int] = mapped_column(Integer, default=0)
-    passed_count: Mapped[int] = mapped_column(Integer, default=0)
-    failed_count: Mapped[int] = mapped_column(Integer, default=0)
-    error_message: Mapped[str] = mapped_column(Text, default="")
-    crawl_config_snapshot: Mapped[dict] = mapped_column(JSONB, default=dict)  # 配置快照
-    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -381,3 +288,14 @@ class AgentRun(Base):
     document_title: Mapped[str] = mapped_column(String(512), default="")  # V010
     document_uuid: Mapped[str] = mapped_column(String(64), default="")    # V011
     batch_id: Mapped[str] = mapped_column(String(64), default="")         # V011
+
+
+# ── 15. fabric_pull_state ─────────────────────────────────────
+
+class FabricPullState(Base):
+    """fabric_pull.py 每个来源拉到了哪个发布序号（下次从这里接着拉）。"""
+    __tablename__ = "fabric_pull_state"
+
+    source_id: Mapped[str] = mapped_column(Text, primary_key=True)
+    last_seq: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

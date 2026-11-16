@@ -1,14 +1,11 @@
 """
-API 客户端 —— 封装 MinerU（PDF 解析）和 Qwen（结构化提取）的请求逻辑。
+API 客户端 —— 封装 LLM（结构化抽取、对话）和 Embedding 的请求逻辑。
 """
 
 import json
 import tempfile
-from pathlib import Path
 
-import httpx
 from openai import OpenAI
-from prefect import task
 from loguru import logger
 
 
@@ -53,81 +50,6 @@ from config.settings import APP
 
 
 # ===================================================================
-#  MinerU 自部署 API —— PDF → Markdown
-# ===================================================================
-
-_MIME_MAP = {
-    ".pdf":  "application/pdf",
-    ".doc":  "application/pdf",   # MinerU 服务端只认 application/pdf，强制覆盖
-    ".docx": "application/pdf",   # 同上
-    ".xls":  "application/vnd.ms-excel",
-    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-}
-
-
-def _mineru_parse(file_path: str) -> dict:
-    """
-    通用 MinerU 解析内核，根据文件扩展名自动选择 MIME type。
-    支持 .pdf / .doc / .docx / .xls / .xlsx。
-    """
-    base = APP.MINERU_API_BASE.rstrip("/")
-    path_obj = Path(file_path)
-    fname = path_obj.name
-    mime = _MIME_MAP.get(path_obj.suffix.lower(), "application/octet-stream")
-    logger.info(f"[MinerU] 同步解析: {file_path} (mime={mime})")
-    try:
-        with open(file_path, "rb") as f:
-            resp = httpx.post(
-                f"{base}/file_parse",
-                files=[("files", (fname, f, mime))],
-                data={"return_md": "true", "backend": "pipeline"},
-                timeout=300,
-            )
-        resp.raise_for_status()
-
-        data = resp.json()
-        markdown = ""
-        if isinstance(data, dict):
-            results = data.get("results", {})
-            if isinstance(results, dict) and results:
-                first = next(iter(results.values()))
-                markdown = first.get("md_content") or first.get("md") or first.get("markdown") or ""
-            if not markdown:
-                markdown = data.get("md_content") or data.get("md") or data.get("markdown") or ""
-        elif isinstance(data, list) and data:
-            markdown = data[0].get("md_content") or data[0].get("md") or data[0].get("markdown") or ""
-        elif isinstance(data, str):
-            markdown = data
-
-        if not markdown:
-            return {"markdown": "", "success": False, "error": f"响应中未找到 markdown 内容，原始响应: {resp.text[:300]}"}
-        logger.info(f"[MinerU] 解析完成，Markdown 长度: {len(markdown)}")
-        return {"markdown": markdown, "success": True, "error": ""}
-    except Exception as e:
-        logger.error(f"[MinerU] 调用异常: {e}")
-        return {"markdown": "", "success": False, "error": str(e)}
-
-
-@task(
-    name="mineru_pdf_to_markdown",
-    retries=APP.TASK_RETRIES,
-    retry_delay_seconds=APP.TASK_RETRY_DELAY,
-)
-def mineru_pdf_to_markdown(pdf_path: str) -> dict:
-    """
-    调用自部署 MinerU 同步接口将 PDF / DOC / DOCX / XLS / XLSX 解析为 Markdown。
-        POST /file_parse → 直接返回结果
-
-    参数:
-        pdf_path: 本地文件路径（.pdf / .doc / .docx / .xls / .xlsx）
-
-    返回:
-        dict: {"markdown": "...", "success": True/False, "error": ""}
-    """
-    return _mineru_parse(pdf_path)
-
-
-# ===================================================================
 #  Qwen 大模型 API —— Markdown → 结构化 JSON
 # ===================================================================
 
@@ -147,11 +69,6 @@ def _build_extraction_client() -> OpenAI:
     )
 
 
-@task(
-    name="qwen_extract_structured",
-    retries=APP.TASK_RETRIES,
-    retry_delay_seconds=APP.TASK_RETRY_DELAY,
-)
 def qwen_extract_structured(
     prompt: str,
     system_prompt: str = "",

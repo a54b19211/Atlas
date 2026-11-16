@@ -47,16 +47,13 @@ def web_fetch(url: str) -> str:
         清理后的页面文本（最多 3000 字符），失败返回空字符串。
     """
     try:
-        from core_engine.scrapling_client import fetch_page
-        result = fetch_page(url, use_simple_fetch=True)
-        page = result.get("page")
-        if page is None:
-            return ""
-        text = getattr(page, "cleaned_text", None) or getattr(page, "text", "") or str(page)
+        import re
+        import httpx
+        resp = httpx.get(url, timeout=15, follow_redirects=True)
+        resp.raise_for_status()
+        html = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", resp.text)
+        text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html)).strip()
         return text[:3000]
-    except ImportError:
-        logger.error("[AgentTool] scrapling_client 不可用")
-        return ""
     except Exception as e:
         logger.error(f"[AgentTool] web_fetch 失败: {e}")
         return ""

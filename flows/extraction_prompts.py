@@ -60,7 +60,7 @@
 
 import json
 import inspect
-from biz_rules.entity_schemas import ENTITY_SCHEMA_MAP, get_entity_schema_description
+from flows.entity_schemas import ENTITY_SCHEMA_MAP, get_entity_schema_description
 
 _PROMPT_DELIMITERS = ["---", "###", "SYSTEM:", "ASSISTANT:", "USER:", "<|im_start|>", "<|im_end|>"]
 

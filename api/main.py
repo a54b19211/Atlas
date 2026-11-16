@@ -4,12 +4,12 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from api.routers import documents, extraction, review, weknora, agent, research, history
+from api.routers import documents, extraction, review, weknora, agent
 from core_engine.exception_logger import ExceptionLogger
 
 app = FastAPI(
-    title="ZK Data Fabric 审核后台 API",
-    description="医药数据采集与知识图谱审核系统",
+    title="Atlas 图谱审核后台 API",
+    description="医药知识图谱：抽取、消歧、审核",
     version="1.0.0",
 )
 
@@ -34,8 +34,6 @@ app.include_router(extraction.router)
 app.include_router(review.router)
 app.include_router(weknora.router)
 app.include_router(agent.router)
-app.include_router(research.router)
-app.include_router(history.router)
 
 
 # ── 统一错误处理 ────────────────────────────────────────────────────────
