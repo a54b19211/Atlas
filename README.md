@@ -4,7 +4,7 @@ Atlas 把资料库（fabric）里洗好的文档变成一张审核过的知识�
 用大模型从文档里抽实体和关系，和已有实体对上号（消歧），人和 Agent 审核，审核通过的再同步到 WeKnora 的 Neo4j。
 
 Atlas 只**读** fabric，不往 fabric 写任何东西。采集、清洗、存档都是 fabric 的事。
-底子是唐的图谱代码（含分级置信度路由 `disambiguation/routing.py`），从旧的大一统仓库里拆出来。
+底子是原来人工审核图谱的代码（含分级置信度路由 `disambiguation/routing.py`），从旧的大一统仓库里拆出来。
 
 ## 几个部分
 
@@ -19,7 +19,7 @@ Atlas 只**读** fabric，不往 fabric 写任何东西。采集、清洗、存�
 | `api/` | 后端接口（FastAPI）：文档、抽取、审核、Agent、WeKnora |
 | `frontend/` | 审核页面（Vue 3 + Element Plus） |
 | `migration/` | 建表迁移 `python -m migration.migrate` |
-| `docs/` | 代码地图、实体类型定义 |
+| `docs/代码地图.md` | 代码地图，含实体类型和判定标准 |
 
 ## 一条文档怎么走
 
