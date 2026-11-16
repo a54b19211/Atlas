@@ -93,7 +93,9 @@ class _AppSettings(BaseSettings):
     # ======================== 资料库 fabric（文档来源，只读）========================
     FABRIC_API_URL: str = "http://127.0.0.1:8000"
     FABRIC_READ_TOKEN: str = ""
-    FABRIC_SOURCES: str = ""                # 逗号分隔的来源；留空则拉 /api/fabric/sources 里全部可读来源
+
+    # 管理接口口令（Authorization: Bearer ...）；留空则管理接口一律拒绝
+    ATLAS_ADMIN_TOKEN: str = ""
 
 
 # 全局单例——整个项目统一用这个

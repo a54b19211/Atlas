@@ -1,0 +1,20 @@
+# Atlas 拉取常驻服务的 systemd 单元样例。路径、用户按部署改，然后：
+#   sudo cp ops/atlas-pull.service /etc/systemd/system/ && sudo systemctl daemon-reload
+#   sudo systemctl enable --now atlas-pull
+[Unit]
+Description=Atlas pull from fabric
+After=network-online.target postgresql.service
+
+[Service]
+Type=simple
+User=atlas
+WorkingDirectory=/opt/atlas
+EnvironmentFile=/opt/atlas/.env
+ExecStart=/opt/atlas/.venv/bin/python -m pull.service
+Restart=on-failure
+RestartSec=30
+KillSignal=SIGTERM
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target

@@ -10,7 +10,8 @@ Atlas 只**读** fabric，不往 fabric 写任何东西。采集、清洗、存�
 
 | 目录 / 文件 | 做什么 |
 |---|---|
-| `fabric_pull.py` | 从 fabric 拉文档到 Atlas 的 `documents` 表（本地缓存） |
+| `pull/` | 常驻服务：从 fabric 拉文档到 `documents` 表（本地缓存），过白名单和质量门槛；管理接口 `api/routers/pull.py` |
+| `ops/` | 部署样例（systemd 单元 `atlas-pull.service`） |
 | `flows/` | 抽取：分块 `chunking.py`、提示词 `extraction_prompts.py`、实体类型 `entity_schemas.py`、流程 `extraction_flow.py`、任务队列 `extraction_worker.py` / `extraction_rq_job.py` |
 | `disambiguation/` | 消歧：强 ID → 别名 → 类型规则 → 向量召回 → Reranker 精排 → 分级路由 |
 | `db/` | 表结构 `models.py`、所有读写 `repository.py`、Agent 运行记录 `agent_run_repo.py`、审核计数监听 `review_listeners.py` |
@@ -24,7 +25,7 @@ Atlas 只**读** fabric，不往 fabric 写任何东西。采集、清洗、存�
 
 ```
 fabric /api/fabric/changes + /clean-text
-  → fabric_pull.py 写 documents（extraction_status=pending）
+  → pull/ 过两道关（来源/类型白名单、质量门槛）后写 documents（extraction_status=pending）
   → 触发抽取（页面或 POST /api/extraction/trigger/pending）
   → 分块 → 大模型抽实体/关系 → 校验 → 消歧 → 写 extracted_entities / entity_relations
   → 人工或 Agent 审核（通过的进实体字典 entity_dict，字段冲突进 entity_merge_queue）
@@ -49,7 +50,7 @@ cd frontend && npm install
 ## 怎么跑
 
 ```bash
-.venv/bin/python fabric_pull.py                 # 拉新文档（可放进定时任务）；--source nmpa 只拉一个来源；--dry-run 只看不写
+.venv/bin/python -m pull.service               # 拉取常驻服务（--once 只跑一轮；部署用 ops/atlas-pull.service）
 .venv/bin/uvicorn api.main:app --port 8100      # 后端
 cd frontend && npm run dev                      # 页面 http://localhost:5174（代理到 8100）
 ```
@@ -64,9 +65,9 @@ cd frontend && npm run dev                      # 页面 http://localhost:5174�
 
 只用 fabric 的公开读接口，凭据放 `Authorization: Bearer $FABRIC_READ_TOKEN`：
 
-- `GET /api/fabric/sources`：有哪些来源（没配 `FABRIC_SOURCES` 时用它）。
 - `GET /api/fabric/changes?source_id=&is_demo=false&after=<序号>&limit=100`：某来源在序号之后新存的版本，按序号翻页。
-- `GET /api/fabric/clean-text?source_id=&is_demo=false&mode=current&cutoff=<时间>&version_ids=...`：这些版本的清洗正文和画像。
+- `GET /api/fabric/clean-text?source_id=&is_demo=false&mode=current&cutoff=<时间>&quality=true&version_ids=...`：清洗正文、画像和质量分。
+- `GET /api/fabric/versions/{version_id}`：按需请求时取单个版本。
 
 写进 `documents` 的字段：
 
@@ -82,6 +83,8 @@ cd frontend && npm run dev                      # 页面 http://localhost:5174�
 | `language` | `clean.language` |
 | `crawl_timestamp` | `first_seen_at` |
 
+白名单在 `atlas_pull_whitelist`，质量门槛、间隔、暂停在 `atlas_settings`，都用 `/api/pull/*` 管理接口改（`Authorization: Bearer $ATLAS_ADMIN_TOKEN`，改动记进 `atlas_admin_log`）；
+`POST /api/pull/request` 按版本号拉进来（绕过白名单），给雷达和人工用。
 拉到哪个序号记在 `fabric_pull_state` 表，一页文档和序号在同一个事务里写，中途断了下次接着拉。
 正文变了的文档会把 `extraction_status` 改回 `pending` 等重新抽取（旧的抽取结果保留，和“重新抽取”按钮一样）。
 

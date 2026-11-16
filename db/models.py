@@ -54,7 +54,7 @@ class Document(Base):
     extracted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     pending_entity_count: Mapped[int] = mapped_column(Integer, default=0)   # 待审核实体数，review_lifecycle 自动维护
     total_entity_count: Mapped[int] = mapped_column(Integer, default=0)     # 文档实体总数，review_lifecycle 自动维护
-    fabric_version_id: Mapped[str] = mapped_column(Text, default="")  # 资料库版本号，fabric_pull.py 写入
+    fabric_version_id: Mapped[str] = mapped_column(Text, default="")  # 资料库版本号，pull/ 写入
     is_deleted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -292,7 +292,7 @@ class AgentRun(Base):
 # ── 15. fabric_pull_state ─────────────────────────────────────
 
 class FabricPullState(Base):
-    """fabric_pull.py 每个来源拉到了哪个发布序号（下次从这里接着拉）。"""
+    """pull/ 每个来源拉到了哪个发布序号（下次从这里接着拉）；其余列（积压、跳过数、上轮起止、错误）见 V018，由 pull/store.py 用 SQL 读写。"""
     __tablename__ = "fabric_pull_state"
 
     source_id: Mapped[str] = mapped_column(Text, primary_key=True)

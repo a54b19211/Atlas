@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""文档查询接口（文档是 fabric_pull.py 从资料库拉来的本地缓存，这里只读）"""
+"""文档查询接口（文档是 pull/ 从资料库拉来的本地缓存，这里只读）"""
 from fastapi import APIRouter, HTTPException, Query
 from loguru import logger
 
