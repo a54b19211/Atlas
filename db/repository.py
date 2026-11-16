@@ -1046,13 +1046,20 @@ def resolve_merge(
     """
     from db.session import get_session
 
+    if resolution not in ("accept_new", "keep_existing", "custom") or (
+            resolution == "custom" and resolved_value is None):
+        raise ValueError("resolution 只能是 accept_new / keep_existing / custom（custom 要给 resolved_value）")
+
     with get_session() as session:
         if session is None:
             return
 
-        merge = session.query(EntityMergeQueue).filter(EntityMergeQueue.id == merge_id).first()
+        # 只处理还没解决的冲突，并锁住这一行：两个人同时点不会各写一次
+        merge = session.query(EntityMergeQueue).filter(
+            EntityMergeQueue.id == merge_id, EntityMergeQueue.resolution == "pending",
+        ).with_for_update().first()
         if merge is None:
-            logger.warning(f"[DB] resolve_merge: merge_id={merge_id} 不存在")
+            logger.warning(f"[DB] resolve_merge: merge_id={merge_id} 不存在或已解决")
             return
 
         merge.resolution = resolution
@@ -1115,7 +1122,7 @@ def batch_resolve_merges(
             merge = session.query(EntityMergeQueue).filter(
                 EntityMergeQueue.id == merge_id,
                 EntityMergeQueue.resolution == "pending",
-            ).first()
+            ).with_for_update().first()
             if merge is None:
                 continue
 
