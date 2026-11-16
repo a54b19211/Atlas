@@ -37,7 +37,7 @@ fabric /api/fabric/changes + /clean-text
 
 ## 怎么装
 
-要 Python 3.10+、Node 18+、PostgreSQL（带 pgvector 扩展）；用 Redis 队列时还要 Redis。
+要 Python 3.12、Node 18+、PostgreSQL（带 pgvector 扩展）；用 Redis 队列时还要 Redis。
 
 ```bash
 python3 -m venv .venv
