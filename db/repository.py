@@ -85,8 +85,6 @@ def _write_operation_log(
 # 1. Document Repository
 # ═══════════════════════════════════════════════════════════════════════
 
-# ── 标准标识符对齐结果（A1）────────────────────────────────────────────
-
 def get_document_by_uuid(uuid: str) -> Optional[Document]:
     """根据 UUID 获取文档（含软删除过滤）。"""
     from db.session import get_session
@@ -288,10 +286,6 @@ def get_pending_weknora_sync(limit: int = 100, offset: int = 0, source_site: str
         ]
         return rows_out, total
 
-
-# ═══════════════════════════════════════════════════════════════════════
-# 2. Attachment Repository
-# ═══════════════════════════════════════════════════════════════════════
 
 # ═══════════════════════════════════════════════════════════════════════
 # 3. EntityDict Repository
@@ -4093,8 +4087,3 @@ def _relation_to_dict(r: EntityRelation) -> dict:
         "review_status": r.review_status,
         "weknora_graph_status": r.weknora_graph_status,
     }
-
-
-# ═══════════════════════════════════════════════════════════════════════
-# 11. 重爬支持
-# ═══════════════════════════════════════════════════════════════════════
