@@ -122,11 +122,24 @@ def rank_with_reranker(
             match_step="step5_reranker",
         )
 
+    # 服务返回的下标和分数先核一遍：越界、重复、负数下标或分数不在 0~1 都当成调用失败
+    scores = {}
     for r in results:
-        idx = r["index"]
-        if idx < len(candidates):
-            candidates[idx].similarity_score = r["relevance_score"]
-            candidates[idx].match_type = "reranker"
+        idx, score = r.get("index"), r.get("relevance_score")
+        if (type(idx) is not int or not 0 <= idx < len(candidates) or idx in scores
+                or not isinstance(score, (int, float)) or not 0 <= score <= 1):
+            logger.error(f"[Reranker] 返回结果不合法: {r}")
+            return DisambiguationResult(
+                status=STATUS_AMBIGUOUS,
+                confidence=0.0,
+                reason="Reranker output invalid",
+                candidates=candidates,
+                match_step="step5_reranker_error",
+            )
+        scores[idx] = float(score)
+    for idx, score in scores.items():
+        candidates[idx].similarity_score = score
+        candidates[idx].match_type = "reranker"
 
     candidates.sort(key=lambda c: c.similarity_score, reverse=True)
 
