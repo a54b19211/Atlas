@@ -14,7 +14,7 @@ from datetime import datetime, timedelta, timezone
 from loguru import logger
 
 PAGE = 100  # fabric 一页最多 100 条
-LEVELS = {"隔离": 0, "低": 1, "中": 2, "高": 3}  # fabric derived_quality_scores.level
+LEVELS = {"隔离": 0, "低": 1, "中": 2, "高": 3}  # fabric clean-text?quality=true 的 level（由画像折算，fabric clean/profile.py quality_level）
 
 
 def document_uuid(source_id: str, source_record_id: str) -> str:
